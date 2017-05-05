@@ -22,3 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+sentinel_tunnel
+log.txt
+commit.txt
