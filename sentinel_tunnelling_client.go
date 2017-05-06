@@ -38,18 +38,17 @@ func NewSentinelTunnellingClient(config_file_location string) *SentinelTunnellin
 	}
 
 	Tunnelling_client := SentinelTunnellingClient{}
-	err1 := json.Unmarshal(data, &(Tunnelling_client.configuration))
-	if err1 != nil {
+	err = json.Unmarshal(data, &(Tunnelling_client.configuration))
+	if err != nil {
 		st_logger.WriteLogMessage(st_logger.FATAL, "an error has occur during configuration read,",
-			err1.Error())
+			err.Error())
 	}
 
-	var err2 error
-	Tunnelling_client.sentinel_connection, err2 =
+	Tunnelling_client.sentinel_connection, err =
 		st_sentinel_connection.NewSentinelConnection(Tunnelling_client.configuration.Sentinels_addresses_list)
-	if err2 != nil {
+	if err != nil {
 		st_logger.WriteLogMessage(st_logger.FATAL, "an error has occur, ",
-			err2.Error())
+			err.Error())
 	}
 
 	st_logger.WriteLogMessage(st_logger.INFO, "done initializing Tunnelling")
@@ -72,10 +71,10 @@ func handleConnection(c net.Conn, db_name string,
 		c.Close()
 		return
 	}
-	db_conn, err1 := net.Dial("tcp", db_address)
-	if err1 != nil {
+	db_conn, err := net.Dial("tcp", db_address)
+	if err != nil {
 		st_logger.WriteLogMessage(st_logger.ERROR, "cannot connect to db ", db_name,
-			",", err1.Error())
+			",", err.Error())
 		c.Close()
 		return
 	}
