@@ -4,12 +4,12 @@ import (
 	// "bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/RedisLabs/sentinel_tunnel/st_logger"
+	"github.com/RedisLabs/sentinel_tunnel/st_sentinel_connection"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
-	"st_logger"
-	"st_sentinel_connection"
 	"time"
 )
 
