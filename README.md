@@ -1,7 +1,9 @@
 # Sentinel Tunnel
-Sentinel Tunnel (ST) is a tool that allows you using the Redis Sentinel capabilities, without any code modifications to your application. For more information about the Redis Sentinel refer to: https://redis.io/topics/sentinel
+Redis Sentinel provides high availability for Redis. In practical terms this means that using Sentinel you can create a Redis deployment that resists without human intervention to certain kind of failures. For more information about the Redis Sentinel refer to: https://redis.io/topics/sentinel.
 
-Sentinel Tunnel discovers the current Redis master via Sentinel, and creates a TCP tunnel between a local port on the client computer to the master. When the master fails, ST disconnects your client's connection. When the client reconnects, ST rediscovers the current master via Sentinel and provides the new address.
+Most of the redis clients has a special implementation for sentinel based connection. When one wishes to start using the HA capabilities of redis with sentinel, he must modified his code to use this spacific sentinel based connection. Moreover some clients do not even support sentinel based connection and so if one wishes to start using the sentinel he must change his entire client library.
+
+Sentinel Tunnel (ST) is a tool that allows you using the Redis Sentinel capabilities, without any code modifications to your application. Sentinel Tunnel discovers the current Redis master via Sentinel, and creates a TCP tunnel between a local port on the client computer to the master. When the master fails, ST disconnects your client's connection. When the client reconnects, ST rediscovers the current master via Sentinel and provides the new address.
 
 ## Install
 Make sure you have a working Go environment - [see the installation instructions here](http://golang.org/doc/install.html).
