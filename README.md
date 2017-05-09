@@ -1,11 +1,25 @@
 # Sentinel Tunnel
+
 Redis Sentinel provides high availability for Redis. In practical terms this means that using Sentinel you can create a Redis deployment that resists without human intervention to certain kind of failures. For more information about the Redis Sentinel refer to: https://redis.io/topics/sentinel.
 
 Most of the redis clients has a special implementation for sentinel based connection. When one wishes to start using the HA capabilities of redis with sentinel, he must modified his code to use this spacific sentinel based connection. Moreover some clients do not even support sentinel based connection and so if one wishes to start using the sentinel he must change his entire client library.
 
-Sentinel Tunnel (ST) is a tool that allows you using the Redis Sentinel capabilities, without any code modifications to your application. Sentinel Tunnel discovers the current Redis master via Sentinel, and creates a TCP tunnel between a local port on the client computer to the master. When the master fails, ST disconnects your client's connection. When the client reconnects, ST rediscovers the current master via Sentinel and provides the new address.
+Sentinel Tunnel (ST) is a tool that allows you using the Redis Sentinel capabilities, without any code modifications to your application. Sentinel Tunnel discovers the current Redis master via Sentinel, and creates a TCP tunnel between a local port on the client computer to the master. When the master fails, ST disconnects your client's connection. When the client reconnects, ST rediscovers the current master via Sentinel and provides the new address. The following diagram illustrates that:
+
+```                                                                                                          _
++----------------------------------------------------------+                                          _,-'*'-,_
+| +---------------------------------------+                |                              _,-._      (_ o v # _)
+| |                           +--------+  |  +----------+  |    +----------+          _,-'  *  `-._  (_'-,_,-'_)
+| |Application code           | Redis  |  |  | Sentinel |  |    |  Redis   | +       (_  O     #  _) (_'|,_,|'_)
+| |(uses regular connections) | client +<--->+  Tunnel  +<----->+ Sentinel +<--+---->(_`-._ ^ _,-'_)   '-,_,-'
+| |                           +--------+  |  +----------+  |    +----------+ | |     (_`|._`|'_,|'_)
+| +---------------------------------------+                |      +----------+ |     (_`|._`|'_,|'_)
+| Application node                                         |        +----------+       `-._`|'_,-'
++----------------------------------------------------------+                               `-'
+```
 
 ## Install
+
 Make sure you have a working Go environment - [see the installation instructions here](http://golang.org/doc/install.html).
 
 To install `sentinel_tunnel`, run:
@@ -19,7 +33,8 @@ export PATH=$PATH:$GOPATH/bin
 ```
 
 ## Configure
-The code contains an example configuration file named `sentinel_tunnel_configuration_example.json`. The configuration file is a json file that contains the following information:
+
+The code contains an example configuration file named `sentinel_tunnel_configuration_example.json`. The configuration file is a JSON file that contains the following information:
 * The Sentinels addresses list
 * The list of databases and their corresponding local port
 
@@ -44,6 +59,7 @@ For example, the following config file contains two Sentinel addresses and two d
 ```
 
 ## Run
+
 In order to run the `sentinel_tunnel`:
 
 ```
