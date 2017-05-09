@@ -8,8 +8,21 @@ Redis Sentinel provides high availability (HA) for Redis. In practical terms thi
 Connecting an application to a Sentinel-managed Redis deployment is usually done with a Sentinel-aware Redis client. While most Redis clients do support Sentinel, the application needs to call a specialized connection management interface of the client to use it. When one wishes to migrate to a Sentinel-enabled Redis deployment, she/he must modify the application to use Sentinel-based connection management. Moreover, when the application uses a Redis client that does not provide support for Sentinel, the migration becomes that much more complex because it also requires replacing the entire client library.
 
 Sentinel Tunnel (ST) discovers the current Redis master via Sentinel, and creates a TCP tunnel between a local port on the client computer to the master. When the master fails, ST disconnects your client's connection. When the client reconnects, ST rediscovers the current master via Sentinel and provides the new address.
+The following diagram illustrates that:
 
+```                                                                                                          _
++----------------------------------------------------------+                                          _,-'*'-,_
+| +---------------------------------------+                |                              _,-._      (_ o v # _)
+| |                           +--------+  |  +----------+  |    +----------+          _,-'  *  `-._  (_'-,_,-'_)
+| |Application code           | Redis  |  |  | Sentinel |  |    |  Redis   | +       (_  O     #  _) (_'|,_,|'_)
+| |(uses regular connections) | client +<--->+  Tunnel  +<----->+ Sentinel +<--+---->(_`-._ ^ _,-'_)   '-,_,-'
+| |                           +--------+  |  +----------+  |    +----------+ | |     (_`|._`|'_,|'_)
+| +---------------------------------------+                |      +----------+ |     (_`|._`|'_,|'_)
+| Application node                                         |        +----------+       `-._`|'_,-'
++----------------------------------------------------------+                               `-'
+```
 ## Install
+
 Make sure you have a working Go environment - [see the installation instructions here](http://golang.org/doc/install.html).
 
 To install `sentinel_tunnel`, run:
