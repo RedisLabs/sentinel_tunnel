@@ -2,9 +2,11 @@ package st_sentinel_connection
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -120,16 +122,61 @@ func (c *Sentinel_connection) reconnectToSentinel() bool {
 			c.current_sentinel_connection = nil
 		}
 
-		var err error
-		c.current_sentinel_connection, err = net.DialTimeout("tcp", sentinelAddr, 300*time.Millisecond)
+		u, err := url.Parse("redis://" + sentinelAddr)
+		if err != nil {
+			fmt.Printf("failed to parse address %s: %v\n", sentinelAddr, err)
+			return false
+		}
+
+		c.current_sentinel_connection, err = net.DialTimeout("tcp", u.Host, 300*time.Millisecond)
 		if err == nil {
 			c.reader = bufio.NewReader(c.current_sentinel_connection)
 			c.writer = bufio.NewWriter(c.current_sentinel_connection)
+
+			pass, ok := u.User.Password()
+			if ok {
+				err = c.auth(pass)
+				if err != nil {
+					fmt.Println(err.Error())
+					return false
+				}
+			}
+
 			return true
 		}
 		fmt.Println(err.Error())
 	}
 	return false
+}
+
+func (c *Sentinel_connection) auth(pass string) error {
+	if pass == "" {
+		return errors.New("password is not supplied")
+	}
+	c.writer.WriteString("*2\r\n")
+	c.writer.WriteString("$4\r\n")
+	c.writer.WriteString("auth\r\n")
+	c.writer.WriteString(fmt.Sprintf("$%d\r\n", len(pass)))
+	c.writer.WriteString(fmt.Sprintf("%s\r\n", pass))
+	c.writer.WriteString("\r\n")
+	c.writer.Flush()
+
+	err := c.parseAuthResponse()
+
+	return err
+}
+
+func (c *Sentinel_connection) parseAuthResponse() error {
+	buf, _, err := c.reader.ReadLine()
+	if err != nil {
+		return errors.New("failed read line from client")
+	}
+
+	if !bytes.Equal([]byte("+OK"), buf) {
+		return errors.New("failed to authenticate")
+	}
+
+	return nil
 }
 
 func (c *Sentinel_connection) GetAddressByDbName(name string) (string, error) {
@@ -144,8 +191,8 @@ func NewSentinelConnection(addresses []string) (*Sentinel_connection, error) {
 		get_master_address_by_name:       make(chan string),
 		get_master_address_by_name_reply: make(chan *Get_master_addr_reply),
 		current_sentinel_connection:      nil,
-		reader: nil,
-		writer: nil,
+		reader:                           nil,
+		writer:                           nil,
 	}
 
 	if !connection.reconnectToSentinel() {
