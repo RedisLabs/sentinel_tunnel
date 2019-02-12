@@ -19,6 +19,7 @@ type SentinelTunnellingDbConfig struct {
 }
 
 type SentinelTunnellingConfiguration struct {
+	Bind_address             string
 	Sentinels_addresses_list []string
 	Databases                []SentinelTunnellingDbConfig
 }
@@ -82,22 +83,22 @@ func handleConnection(c net.Conn, db_name string,
 	go createTunnelling(db_conn, c)
 }
 
-func handleSigleDbConnections(listening_port string, db_name string,
+func handleSigleDbConnections(Bind_address, listening_port string, db_name string,
 	get_db_address_by_name get_db_address_by_name_function) {
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", listening_port))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", Bind_address, listening_port))
 	if err != nil {
-		st_logger.WriteLogMessage(st_logger.FATAL, "cannot listen to port ",
-			listening_port, err.Error())
+		st_logger.WriteLogMessage(st_logger.FATAL, "cannot listen on", Bind_address,
+                        "port", listening_port, err.Error())
 	}
 
-	st_logger.WriteLogMessage(st_logger.INFO, "listening on port ", listening_port,
-		" for connections to database: ", db_name)
+	st_logger.WriteLogMessage(st_logger.INFO, "listening on", Bind_address, "port",
+		listening_port, "for connections to database: ", db_name)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			st_logger.WriteLogMessage(st_logger.FATAL, "cannot accept connections on port ",
-				listening_port, err.Error())
+			st_logger.WriteLogMessage(st_logger.FATAL, "cannot accept connections on",
+                                Bind_address, "port", listening_port, err.Error())
 		}
 		go handleConnection(conn, db_name, get_db_address_by_name)
 	}
@@ -105,9 +106,12 @@ func handleSigleDbConnections(listening_port string, db_name string,
 }
 
 func (st_client *SentinelTunnellingClient) Start() {
+	if len(st_client.configuration.Bind_address) == 0 {
+                st_client.configuration.Bind_address = "0.0.0.0"
+        }
 	for _, db_conf := range st_client.configuration.Databases {
-		go handleSigleDbConnections(db_conf.Local_port, db_conf.Name,
-			st_client.sentinel_connection.GetAddressByDbName)
+		go handleSigleDbConnections(st_client.configuration.Bind_address, db_conf.Local_port,
+			db_conf.Name, st_client.sentinel_connection.GetAddressByDbName)
 	}
 }
 

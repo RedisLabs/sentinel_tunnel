@@ -1,4 +1,5 @@
 {
+	"Bind_address":"127.0.0.1",
 	"Sentinels_addresses_list":[
 		"node1.local:8001",
 		"node2.local:8001"
