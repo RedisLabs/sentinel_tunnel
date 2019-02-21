@@ -2,9 +2,11 @@ package st_sentinel_connection
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -16,6 +18,8 @@ type Get_master_addr_reply struct {
 
 type Sentinel_connection struct {
 	sentinels_addresses              []string
+	sentinel_dial_timeout            time.Duration
+	sentinel_command_timeout         time.Duration
 	current_sentinel_connection      net.Conn
 	reader                           *bufio.Reader
 	writer                           *bufio.Writer
@@ -32,7 +36,7 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 	var ret []string
 	buf, _, e := c.reader.ReadLine()
 	if e != nil {
-		return nil, errors.New("failed read line from client"), client_closed
+		return nil, fmt.Errorf("failed read line from client: %v", e), client_closed
 	}
 	if len(buf) == 0 {
 		return nil, errors.New("failed read line from client"), client_closed
@@ -48,7 +52,7 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 	for i := 0; i < mbulk_size; i++ {
 		buf1, _, e1 := c.reader.ReadLine()
 		if e1 != nil {
-			return nil, errors.New("failed read line from client"), client_closed
+			return nil, fmt.Errorf("failed read line from client: %v", e1), client_closed
 		}
 		if len(buf1) == 0 {
 			return nil, errors.New("failed read line from client"), client_closed
@@ -59,7 +63,7 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 		bulk_size, _ := strconv.Atoi(string(buf1[1:]))
 		buf2, _, e2 := c.reader.ReadLine()
 		if e2 != nil {
-			return nil, errors.New("failed read line from client"), client_closed
+			return nil, fmt.Errorf("failed read line from client: %v", e2), client_closed
 		}
 		bulk := string(buf2)
 		if len(bulk) != bulk_size {
@@ -71,15 +75,22 @@ func (c *Sentinel_connection) parseResponse() (request []string, err error, is_c
 }
 
 func (c *Sentinel_connection) getMasterAddrByNameFromSentinel(db_name string) (addr []string, returned_err error, is_client_closed bool) {
-	c.writer.WriteString("*3\r\n")
-	c.writer.WriteString("$8\r\n")
-	c.writer.WriteString("sentinel\r\n")
-	c.writer.WriteString("$23\r\n")
-	c.writer.WriteString("get-master-addr-by-name\r\n")
-	c.writer.WriteString(fmt.Sprintf("$%d\r\n", len(db_name)))
-	c.writer.WriteString(db_name)
-	c.writer.WriteString("\r\n")
-	c.writer.Flush()
+	err := c.current_sentinel_connection.SetDeadline(time.Now().Add(c.sentinel_command_timeout))
+	if err != nil {
+		return nil, err, false
+	}
+	_, err = fmt.Fprintf(c.writer, "*3\r\n$8\r\nsentinel\r\n$23\r\nget-master-addr-by-name\r\n$%d\r\n%s\r\n", len(db_name), db_name)
+	if err != nil {
+		return nil, err, false
+	}
+	err = c.writer.Flush()
+	if err != nil {
+		return nil, err, false
+	}
+	err = c.current_sentinel_connection.SetDeadline(time.Time{})
+	if err != nil {
+		return nil, err, false
+	}
 
 	return c.parseResponse()
 }
@@ -88,7 +99,7 @@ func (c *Sentinel_connection) retrieveAddressByDbName() {
 	for db_name := range c.get_master_address_by_name {
 		addr, err, is_client_closed := c.getMasterAddrByNameFromSentinel(db_name)
 		if err != nil {
-			fmt.Println("err: ", err.Error())
+			fmt.Println("failed to get master addresses: ", err.Error())
 			if !is_client_closed {
 				c.get_master_address_by_name_reply <- &Get_master_addr_reply{
 					reply: "",
@@ -120,16 +131,70 @@ func (c *Sentinel_connection) reconnectToSentinel() bool {
 			c.current_sentinel_connection = nil
 		}
 
-		var err error
-		c.current_sentinel_connection, err = net.DialTimeout("tcp", sentinelAddr, 300*time.Millisecond)
+		u, err := url.Parse("redis://" + sentinelAddr)
+		if err != nil {
+			fmt.Printf("failed to parse address %s: %v\n", sentinelAddr, err)
+			return false
+		}
+
+		c.current_sentinel_connection, err = net.DialTimeout("tcp", u.Host, c.sentinel_dial_timeout)
 		if err == nil {
 			c.reader = bufio.NewReader(c.current_sentinel_connection)
 			c.writer = bufio.NewWriter(c.current_sentinel_connection)
+
+			pass, ok := u.User.Password()
+			if ok {
+				err = c.auth(pass)
+				if err != nil {
+					fmt.Printf("failed to auth: %v\n", err)
+					return false
+				}
+			}
+
 			return true
 		}
-		fmt.Println(err.Error())
+		fmt.Printf("failed to dial sentinel %s: %v\n", u.Host, err)
 	}
 	return false
+}
+
+func (c *Sentinel_connection) auth(pass string) error {
+	if pass == "" {
+		return errors.New("password is not supplied")
+	}
+	err := c.current_sentinel_connection.SetDeadline(time.Now().Add(c.sentinel_command_timeout))
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(c.writer, "*2\r\n$4\r\nauth\r\n$%d\r\n%s\r\n", len(pass), pass)
+	if err != nil {
+		return err
+	}
+	err = c.writer.Flush()
+	if err != nil {
+		return err
+	}
+	err = c.current_sentinel_connection.SetDeadline(time.Time{})
+	if err != nil {
+		return err
+	}
+
+	err = c.parseAuthResponse()
+
+	return err
+}
+
+func (c *Sentinel_connection) parseAuthResponse() error {
+	buf, _, err := c.reader.ReadLine()
+	if err != nil {
+		return fmt.Errorf("failed read line from client: %v", err)
+	}
+
+	if !bytes.Equal([]byte("+OK"), buf) {
+		return errors.New("failed to authenticate")
+	}
+
+	return nil
 }
 
 func (c *Sentinel_connection) GetAddressByDbName(name string) (string, error) {
@@ -138,14 +203,16 @@ func (c *Sentinel_connection) GetAddressByDbName(name string) (string, error) {
 	return reply.reply, reply.err
 }
 
-func NewSentinelConnection(addresses []string) (*Sentinel_connection, error) {
+func NewSentinelConnection(addresses []string, dialTimeout, commandTimeout time.Duration) (*Sentinel_connection, error) {
 	connection := Sentinel_connection{
 		sentinels_addresses:              addresses,
 		get_master_address_by_name:       make(chan string),
 		get_master_address_by_name_reply: make(chan *Get_master_addr_reply),
 		current_sentinel_connection:      nil,
-		reader: nil,
-		writer: nil,
+		reader:                           nil,
+		writer:                           nil,
+		sentinel_dial_timeout:            time.Millisecond * dialTimeout,
+		sentinel_command_timeout:         time.Millisecond * commandTimeout,
 	}
 
 	if !connection.reconnectToSentinel() {
