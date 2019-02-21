@@ -1,16 +1,17 @@
 package main
 
 import (
-	// "bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/RedisLabs/sentinel_tunnel/st_logger"
-	"github.com/RedisLabs/sentinel_tunnel/st_sentinel_connection"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
+	"os/signal"
 	"time"
+
+	"github.com/RedisLabs/sentinel_tunnel/st_logger"
+	"github.com/RedisLabs/sentinel_tunnel/st_sentinel_connection"
 )
 
 type SentinelTunnellingDbConfig struct {
@@ -20,6 +21,9 @@ type SentinelTunnellingDbConfig struct {
 
 type SentinelTunnellingConfiguration struct {
 	Sentinels_addresses_list []string
+	Sentinel_dial_timeout    time.Duration
+	Sentinel_command_timeout time.Duration
+	Sentinel_proxy_timeout   time.Duration
 	Databases                []SentinelTunnellingDbConfig
 }
 
@@ -45,7 +49,7 @@ func NewSentinelTunnellingClient(config_file_location string) *SentinelTunnellin
 	}
 
 	Tunnelling_client.sentinel_connection, err =
-		st_sentinel_connection.NewSentinelConnection(Tunnelling_client.configuration.Sentinels_addresses_list)
+		st_sentinel_connection.NewSentinelConnection(Tunnelling_client.configuration.Sentinels_addresses_list, Tunnelling_client.configuration.Sentinel_dial_timeout, Tunnelling_client.configuration.Sentinel_command_timeout)
 	if err != nil {
 		st_logger.WriteLogMessage(st_logger.FATAL, "an error has occur, ",
 			err.Error())
@@ -57,13 +61,16 @@ func NewSentinelTunnellingClient(config_file_location string) *SentinelTunnellin
 }
 
 func createTunnelling(conn1 net.Conn, conn2 net.Conn) {
-	io.Copy(conn1, conn2)
+	_, err := io.Copy(conn1, conn2)
+	if err != nil {
+		st_logger.WriteLogMessage(st_logger.ERROR, "tunneling failed, ", err.Error())
+	}
 	conn1.Close()
 	conn2.Close()
 }
 
 func handleConnection(c net.Conn, db_name string,
-	get_db_address_by_name get_db_address_by_name_function) {
+	get_db_address_by_name get_db_address_by_name_function, proxy_timeout time.Duration) {
 	db_address, err := get_db_address_by_name(db_name)
 	if err != nil {
 		st_logger.WriteLogMessage(st_logger.ERROR, "cannot get db address for ", db_name,
@@ -71,7 +78,7 @@ func handleConnection(c net.Conn, db_name string,
 		c.Close()
 		return
 	}
-	db_conn, err := net.Dial("tcp", db_address)
+	db_conn, err := net.DialTimeout("tcp", db_address, proxy_timeout)
 	if err != nil {
 		st_logger.WriteLogMessage(st_logger.ERROR, "cannot connect to db ", db_name,
 			",", err.Error())
@@ -83,7 +90,7 @@ func handleConnection(c net.Conn, db_name string,
 }
 
 func handleSigleDbConnections(listening_port string, db_name string,
-	get_db_address_by_name get_db_address_by_name_function) {
+	get_db_address_by_name get_db_address_by_name_function, proxy_timeout time.Duration) {
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", listening_port))
 	if err != nil {
@@ -99,7 +106,7 @@ func handleSigleDbConnections(listening_port string, db_name string,
 			st_logger.WriteLogMessage(st_logger.FATAL, "cannot accept connections on port ",
 				listening_port, err.Error())
 		}
-		go handleConnection(conn, db_name, get_db_address_by_name)
+		go handleConnection(conn, db_name, get_db_address_by_name, proxy_timeout)
 	}
 
 }
@@ -107,7 +114,7 @@ func handleSigleDbConnections(listening_port string, db_name string,
 func (st_client *SentinelTunnellingClient) Start() {
 	for _, db_conf := range st_client.configuration.Databases {
 		go handleSigleDbConnections(db_conf.Local_port, db_conf.Name,
-			st_client.sentinel_connection.GetAddressByDbName)
+			st_client.sentinel_connection.GetAddressByDbName, st_client.configuration.Sentinel_proxy_timeout*time.Millisecond)
 	}
 }
 
@@ -119,7 +126,8 @@ func main() {
 	st_logger.InitializeLogger(os.Args[2])
 	st_client := NewSentinelTunnellingClient(os.Args[1])
 	st_client.Start()
-	for {
-		time.Sleep(1000 * time.Millisecond)
-	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
 }
