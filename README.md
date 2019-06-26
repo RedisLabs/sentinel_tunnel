@@ -45,20 +45,21 @@ For example, the following config file contains two Sentinel addresses and two d
 
 ```json
 {
-	"Sentinels_addresses_list":[
-		"node1.local:8001",
-		"node2.local:8001"
-	],
-	"Databases":[
-		{
-			"Name":"db1",
-			"Local_port":"12345"
-		},
-		{
-			"Name":"db2",
-			"Local_port":"12346"	
-		}
-	]
+  "sentinels": [
+    "127.0.0.1:26381",
+    "127.0.0.1:26382",
+    "127.0.0.1:26383"
+  ],
+  "databases": [
+    {
+      "name": "my_redis_master",
+      "port": 36381
+    },
+    {
+      "name": "my_redis_master2",
+      "port": 36382
+    }
+  ]
 }
 ```
 
@@ -66,9 +67,8 @@ For example, the following config file contains two Sentinel addresses and two d
 In order to run `sentinel_tunnel`:
 
 ```bash
-$ ./sentinel_tunnel <config_file_path> <log_file_path>
+$ ./sentinel_tunnel <config_file_path>
 ```
-Set `log_file_path` to `/dev/null` for no logs.
 
 ## License
 

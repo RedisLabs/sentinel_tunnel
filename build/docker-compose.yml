@@ -1,0 +1,67 @@
+version: '2.1'
+services:
+
+  redis1:
+    image: redis:3.2-alpine
+    ports:
+      - 6381:6379
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.10
+
+  sentinel1:
+    image: redis:3.2-alpine
+    ports:
+      - 26381:26379
+    volumes:
+      - ./sentinel1.conf:/etc/sentinel.conf
+    command: redis-server /etc/sentinel.conf --sentinel
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.11
+
+  redis2:
+    image: redis:3.2-alpine
+    ports:
+      - 6382:6379
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.20
+
+  sentinel2:
+    image: redis:3.2-alpine
+    ports:
+      - 26382:26379
+    volumes:
+      - ./sentinel2.conf:/etc/sentinel.conf
+    command: redis-server /etc/sentinel.conf --sentinel
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.21
+
+  redis3:
+    image: redis:3.2-alpine
+    ports:
+      - 6383:6379
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.30
+
+  sentinel3:
+    image: redis:3.2-alpine
+    ports:
+      - 26383:26379
+    volumes:
+      - ./sentinel3.conf:/etc/sentinel.conf
+    command: redis-server /etc/sentinel.conf --sentinel
+    networks:
+      testnet:
+        ipv4_address: 172.22.1.31
+
+networks:
+  testnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.1.0/24
