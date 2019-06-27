@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 		fmt.Println("usage : sentinel_tunnel <config_file_path>")
 		return
 	}
