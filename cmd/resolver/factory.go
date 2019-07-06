@@ -27,12 +27,6 @@ func createSentinel(addr string) (*redis.SentinelClient, error) {
 		Addr: addr,
 	})
 
-	err := sentinel.Ping().Err()
-	if err != nil {
-		log.Error().Err(err).Msgf("error connecting to sentinel: %s", addr)
-
-		return nil, err
-	}
 	log.Debug().Msgf("connected to sentinel: %s", addr)
 
 	return sentinel, nil
