@@ -3,5 +3,6 @@
     "extends": [
         "local>USA-RedDragon/renovate-configs",
         "local>USA-RedDragon/renovate-configs:golang"
-    ]
+    ],
+    "includeForks": true
 }
