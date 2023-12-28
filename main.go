@@ -12,6 +12,15 @@ import (
 	"github.com/USA-RedDragon/sentinel_tunnel/internal/sentinel_connection"
 )
 
+// https://goreleaser.com/cookbooks/using-main.version/
+//
+//nolint:golint,gochecknoglobals
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 type SentinelTunnellingDbConfig struct {
 	Name       string
 	Local_port string
@@ -111,6 +120,7 @@ func (st_client *SentinelTunnellingClient) Start() {
 }
 
 func main() {
+	fmt.Printf("Redis Sentinel Tunnel %s (%s) <%s>\n", version, commit, date)
 	if len(os.Args) < 2 {
 		fmt.Printf("usage : %s <config_file_path>\n", os.Args[0])
 		return
