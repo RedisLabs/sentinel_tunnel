@@ -1,4 +1,4 @@
-package st_sentinel_connection
+package sentinel_connection
 
 import (
 	"bufio"
@@ -144,8 +144,8 @@ func NewSentinelConnection(addresses []string) (*Sentinel_connection, error) {
 		get_master_address_by_name:       make(chan string),
 		get_master_address_by_name_reply: make(chan *Get_master_addr_reply),
 		current_sentinel_connection:      nil,
-		reader: nil,
-		writer: nil,
+		reader:                           nil,
+		writer:                           nil,
 	}
 
 	if !connection.reconnectToSentinel() {

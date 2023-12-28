@@ -1,4 +1,4 @@
-package st_logger
+package logger
 
 import (
 	"bytes"
