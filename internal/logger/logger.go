@@ -6,7 +6,13 @@ import (
 	"os"
 )
 
-var logger *log.Logger
+//nolint:golint,gochecknoglobals
+var (
+	infoLog  *log.Logger
+	errorLog *log.Logger
+	fatalLog *log.Logger
+	debugLog *log.Logger
+)
 
 const (
 	INFO  = iota
@@ -15,37 +21,38 @@ const (
 	DEBUG = iota
 )
 
-func InitializeLogger(log_file_path string) {
-	file, err := os.OpenFile(log_file_path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalln("Failed to open log file", log_file_path, ":", err)
-	}
-	logger = log.New(file,
-		"",
+func InitializeLogger() {
+	infoLog = log.New(os.Stdout,
+		"INFO: ",
+		log.Ldate|log.Ltime)
+	errorLog = log.New(os.Stderr,
+		"ERROR: ",
+		log.Ldate|log.Ltime)
+	fatalLog = log.New(os.Stderr,
+		"FATAL: ",
+		log.Ldate|log.Ltime)
+	debugLog = log.New(os.Stdout,
+		"DEBUG: ",
 		log.Ldate|log.Ltime)
 }
 
 func WriteLogMessage(level int, message ...string) {
 	var buffer bytes.Buffer
-	if level == INFO {
-		buffer.WriteString("info : ")
-	} else if level == ERROR {
-		buffer.WriteString("error : ")
-	} else if level == FATAL {
-		buffer.WriteString("fatal : ")
-	} else if level == FATAL {
-		buffer.WriteString("debug : ")
-	}
 
 	for _, m := range message {
 		buffer.WriteString(m)
 		buffer.WriteString(" ")
 	}
 
-	logger.Println(buffer.String())
-
-	if level == FATAL {
-		logger.Println("fatal error occure commiting suicide")
+	switch level {
+	case INFO:
+		infoLog.Println(buffer.String())
+	case ERROR:
+		errorLog.Println(buffer.String())
+	case FATAL:
+		fatalLog.Println(buffer.String())
 		os.Exit(1)
+	case DEBUG:
+		debugLog.Println(buffer.String())
 	}
 }

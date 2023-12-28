@@ -111,11 +111,11 @@ func (st_client *SentinelTunnellingClient) Start() {
 }
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("usage : sentinel_tunnel <config_file_path> <log_file_path>")
+	if len(os.Args) < 2 {
+		fmt.Printf("usage : %s <config_file_path>\n", os.Args[0])
 		return
 	}
-	logger.InitializeLogger(os.Args[2])
+	logger.InitializeLogger()
 	st_client := NewSentinelTunnellingClient(os.Args[1])
 	st_client.Start()
 	for {
