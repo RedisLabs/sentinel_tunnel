@@ -1,11 +1,9 @@
 package main
 
 import (
-	// "bufio"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"time"
@@ -32,7 +30,7 @@ type SentinelTunnellingClient struct {
 type get_db_address_by_name_function func(db_name string) (string, error)
 
 func NewSentinelTunnellingClient(config_file_location string) *SentinelTunnellingClient {
-	data, err := ioutil.ReadFile(config_file_location)
+	data, err := os.ReadFile(config_file_location)
 	if err != nil {
 		logger.WriteLogMessage(logger.FATAL, "an error has occur during configuration read",
 			err.Error())
