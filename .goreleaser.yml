@@ -1,0 +1,128 @@
+---
+project_name: sentinel_tunnel
+
+release:
+  extra_files:
+    - glob: ./LICENSE
+  github:
+    owner: USA-RedDragon
+    name: "{{ .ProjectName }}"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-amd64"
+    use: buildx
+    goarch: amd64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-armv7"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-armv7"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-armv7"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-armv7"
+    use: buildx
+    goarch: arm
+    goarm: "7"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - "--platform=linux/arm/v7"
+  - image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-armv6"
+    use: buildx
+    goarch: arm
+    goarm: "6"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - "--platform=linux/arm/v6"
+  - image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-arm64"
+    use: buildx
+    goarch: arm64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
+      - "--platform=linux/arm64"
+
+docker_manifests:
+  - name_template: "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:{{ .Tag }}-armv7"
+  - name_template: "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}"
+    image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}-armv7"
+  - name_template: "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}-armv7"
+  - name_template: "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest"
+    image_templates:
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-amd64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-arm64"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-armv6"
+      - "ghcr.io/usa-reddragon/{{ .ProjectName }}:latest-armv7"
+
+builds:
+  - main: .
+    binary: "{{ .ProjectName }}"
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - riscv64
+    goarm:
+      - "6"
+      - "7"
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+
+milestones:
+  - close: true

@@ -1,0 +1,64 @@
+run:
+  timeout: 30m
+
+  skip-files:
+    - ".*\\_gen\\.go$"
+    - ".*\\_gen\\_test\\.go$"
+    - ".*\\_test\\.go$"
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - containedctx
+    - contextcheck
+    - decorder
+    - dogsled
+    - dupword
+    - durationcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forcetypeassert
+    - gci
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - goerr113
+    - gofmt
+    - goheader
+    - gomnd
+    - gomoddirectives
+    - gosec
+    - grouper
+    - loggercheck
+    - misspell
+    - nilerr
+    - nilnil
+    - noctx
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - predeclared
+    - reassign
+    - revive
+    - testpackage
+    - tparallel
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wrapcheck
+
+linters-settings:
+  goheader:
+    template-path: .copyright-header

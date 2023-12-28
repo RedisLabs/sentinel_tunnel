@@ -1,0 +1,36 @@
+name: Per-architecture test
+
+on:
+  pull_request:
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  test-linux:
+    name: Test Linux
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux]
+        goarch: [arm, amd64, arm64, riscv64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: docker run --privileged --rm tonistiigi/binfmt --install all
+
+      - uses: Wandalen/wretry.action@master
+        with:
+          command: go test -p 2 -v ./...
+          attempt_limit: 3
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"

@@ -1,0 +1,11 @@
+codecov:
+    notify:
+        after_n_builds: 1
+comment:
+    require_changes: false
+    after_n_builds: 1
+github_checks:
+    annotations: false
+parsers:
+    go:
+        partials_as_hits: true
