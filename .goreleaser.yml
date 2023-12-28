@@ -22,7 +22,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.licenses=BSD-2-Clause
       - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - "--platform=linux/amd64"
@@ -40,7 +40,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.licenses=BSD-2-Clause
       - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - "--platform=linux/arm/v7"
@@ -58,7 +58,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.licenses=BSD-2-Clause
       - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - "--platform=linux/arm/v6"
@@ -75,7 +75,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - --label=org.opencontainers.image.licenses=BSD-3-Clause
+      - --label=org.opencontainers.image.licenses=BSD-2-Clause
       - --label=org.opencontainers.image.url=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - --label=org.opencontainers.image.source=https://github.com/USA-RedDragon/{{ .ProjectName }}
       - "--platform=linux/arm64"
